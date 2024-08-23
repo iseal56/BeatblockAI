@@ -25,7 +25,7 @@ public class InputRobot {
         g.drawImage(image, 0, 0, null);
         g.dispose();
 
-        // Resize the image to a fixed size
+        // Resize the image to a fixed size and grayscale it
         int width = 128;
         int height = 72;
         BufferedImage resizedImage = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);

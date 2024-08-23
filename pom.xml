@@ -71,6 +71,12 @@
             <version>1.0.0-M2.1</version>
             <scope>compile</scope>
         </dependency>
+        <!--<dependency>
+            <groupId>org.nd4j</groupId>
+            <artifactId>nd4j-cuda-11.2</artifactId> Will add later
+            <version>1.0.0-M2.1</version>
+            <scope>compile</scope>
+        </dependency> -->
         <dependency>
             <groupId>org.nd4j</groupId>
             <artifactId>nd4j-native</artifactId>
@@ -84,19 +90,9 @@
             <scope>compile</scope>
         </dependency>
         <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>tesseract</artifactId>
-            <version>5.3.4-1.5.10</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>3.0.0-beta2</version>
-        </dependency>
-        <dependency>
-            <groupId>org.bytedeco</groupId>
-            <artifactId>leptonica</artifactId>
-            <version>1.82.0-1.5.7</version>
+            <groupId>io.javalin</groupId>
+            <artifactId>javalin</artifactId>
+            <version>6.2.0</version>
         </dependency>
     </dependencies>
 

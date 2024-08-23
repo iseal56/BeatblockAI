@@ -1,7 +1,6 @@
 package dev.iseal;
 
 import dev.iseal.BeatBlockAI.Model.PPOTrainer;
-import dev.iseal.Logging.LoggerManager;
 
 public class Main {
     public static void main(String[] args) {
@@ -14,7 +13,22 @@ public class Main {
             throw new RuntimeException(e);
         }
         System.out.println("Running PPOTrainer");
+        loop();
+    }
+
+    private static void loop() {
         PPOTrainer trainer = new PPOTrainer();
-        trainer.runGame();
+        try {
+            trainer.runGame();
+        } catch (Exception e) {
+            e.printStackTrace();
+            System.out.println("crashed, restarting");
+            try {
+                Thread.sleep(5000);
+            } catch (InterruptedException ex) {
+                throw new RuntimeException(ex);
+            }
+            loop();
+        }
     }
 }

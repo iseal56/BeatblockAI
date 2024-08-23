@@ -25,8 +25,14 @@ public class OutputRobot {
     }
 
     public void restartGame() {
+        // normalize mouse position
+        robot.mouseMove(0,0);
+
+        // select restart game
         robot.keyPress(KeyEvent.VK_DOWN);
         robot.keyRelease(KeyEvent.VK_DOWN);
+
+        // press enter
         robot.keyPress(KeyEvent.VK_ENTER);
         robot.keyRelease(KeyEvent.VK_ENTER);
     }
