@@ -2,6 +2,8 @@ package dev.iseal.ModInterface;
 
 import io.javalin.Javalin;
 
+import java.sql.SQLSyntaxErrorException;
+
 public class JavalinListener extends Thread {
 
     Javalin app;

@@ -28,12 +28,19 @@ public class OutputRobot {
         // normalize mouse position
         robot.mouseMove(0,0);
 
-        // select restart game
-        robot.keyPress(KeyEvent.VK_DOWN);
-        robot.keyRelease(KeyEvent.VK_DOWN);
+        // wait for animation to finish and chill out for a second
+        try {
+            Thread.sleep(5000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
 
-        // press enter
         robot.keyPress(KeyEvent.VK_ENTER);
+        try {
+            Thread.sleep(250);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
         robot.keyRelease(KeyEvent.VK_ENTER);
     }
 

@@ -2,10 +2,10 @@ package dev.iseal.ModInterface;
 
 public class ModInterface {
 
-    protected int misses;
-    protected int barelies;
-    protected double accuracy;
-    protected boolean gameEnded;
+    protected int misses = 0;
+    protected int barelies = 0;
+    protected double accuracy = 0.0;
+    protected boolean gameEnded = false;
 
     public void init() {
         JavalinListener listener = new JavalinListener(this);
