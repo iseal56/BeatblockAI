@@ -4,20 +4,16 @@ import dev.iseal.BeatBlockAI.Model.Input.InputRobot;
 import dev.iseal.BeatBlockAI.Model.Output.OutputRobot;
 import dev.iseal.ModInterface.ModInterface;
 import org.deeplearning4j.nn.multilayer.MultiLayerNetwork;
-import org.eclipse.jetty.util.thread.QueuedThreadPool;
 import org.nd4j.linalg.api.ndarray.INDArray;
 import org.nd4j.linalg.dataset.DataSet;
-import org.nd4j.linalg.dataset.api.preprocessor.ImagePreProcessingScaler;
 import org.nd4j.linalg.factory.Nd4j;
 
-import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
-import java.util.ArrayList;
 import java.util.concurrent.*;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.logging.Logger;
 
 public class PPOTrainer {
@@ -83,33 +79,40 @@ public class PPOTrainer {
                 throw new RuntimeException(e);
             }
         }
-        BufferedImage screen;
+        AtomicReference<BufferedImage> screen = new AtomicReference<>();
 
         while (!modInterface.hasGameEnded()) {
-            screen = inputRobot.getCaptureScreen();
             long startTime = System.currentTimeMillis();
+            try {
+            executorService.submit(() -> {
+                    screen.set(inputRobot.getCaptureScreen());
 
-            INDArray input = preprocessImage(screen);
+                    INDArray input = preprocessImage(screen.get());
 
-            INDArray output = network.output(input,true);
-            System.out.println("Output: " + output);
-            float outMouseX = output.getFloat(0);
-            float outMouseY = output.getFloat(1);
-            boolean pressZ = output.getFloat(2) > 0.5f;
+                    INDArray output = network.output(input,true);
+                    System.out.println("Output: " + output);
+                    float outMouseX = output.getFloat(0);
+                    float outMouseY = output.getFloat(1);
+                    boolean pressZ = output.getFloat(2) > 0.5f;
 
-            // Normalize coordinates to screen bounds,
-            // assuming that the screen is 1080p
-            // but the mouseX and mouseY values are between 0 and 1
-            int mouseX = (int) (outMouseX * 1920f);
-            int mouseY = (int) (outMouseY * 1080f);
+                    // Normalize coordinates to screen bounds,
+                    // assuming that the screen is 1080p
+                    // but the mouseX and mouseY values are between 0 and 1
+                    int mouseX = (int) (outMouseX * 1920f);
+                    int mouseY = (int) (outMouseY * 1080f);
 
 
-            outputRobot.moveMouse(mouseX, mouseY);
-            if (pressZ) {
-                outputRobot.pressZKey();
+                    outputRobot.moveMouse(mouseX, mouseY);
+                    if (pressZ) {
+                        outputRobot.pressZKey();
+                    }
+
+                updateModel(input, output, modInterface.getAccuracy()-50);
+                });
+            } catch (RejectedExecutionException e) {
+                logger.warning("Executor service rejected task.");
             }
 
-            updateModel(input, output, modInterface.getAccuracy()-50);
 
             long endTime = System.currentTimeMillis();
             long elapsedTime = endTime - startTime;
@@ -125,6 +128,7 @@ public class PPOTrainer {
             }
         }
 
+        executorService.shutdownNow();
         inputRobot.updateCaptureScreen(false);
 
         double reward = getReward();
@@ -139,37 +143,28 @@ public class PPOTrainer {
 
         for (int i = 0; i < initialSize; i++) {
             //use executorservice to parallelize training
-            executorService.submit(() -> {
-                long allocated = Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory();
-                long presumableFree = 5L*1024*1024*1024 - allocated;
-                if (presumableFree < 3L*1024L*1024L*1024L) {
-                    System.gc();
-                    while (presumableFree < 3L*1024L*1024L*1024L) {
-                        try {
-                            Thread.sleep(1000);
-                        } catch (InterruptedException e) {
-                            throw new RuntimeException(e);
-                        }
-                        presumableFree = 5L*1024*1024*1024 - (Runtime.getRuntime().totalMemory() - Runtime.getRuntime().freeMemory());
-                    }
-                }
-                INDArray input = inputs.poll();
-                INDArray output = outputs.poll();
-                double r = rewards.poll();
+            try {
+                executorService.submit(() -> {
+                    INDArray input = inputs.poll();
+                    INDArray output = outputs.poll();
+                    double r = rewards.poll();
 
-                // Calculate the target value using the current output and reward
-                double targetValue = r + discountFactor * output.getDouble(0);
-                double targetValue2 = r + discountFactor * output.getDouble(1);
-                double targetValue3 = r + discountFactor * output.getDouble(2);
-                INDArray target = Nd4j.create(new double[]{targetValue, targetValue2, targetValue3}, new int[]{1, 3});
+                    // Calculate the target value using the current output and reward
+                    double targetValue = r + discountFactor * output.getDouble(0);
+                    double targetValue2 = r + discountFactor * output.getDouble(1);
+                    double targetValue3 = r + discountFactor * output.getDouble(2);
+                    INDArray target = Nd4j.create(new double[]{targetValue, targetValue2, targetValue3}, new int[]{1, 3});
 
-                // Create a dataset with the input and target
-                DataSet dataSet = new DataSet(input, target);
-                network.fit(dataSet);
+                    // Create a dataset with the input and target
+                    DataSet dataSet = new DataSet(input, target);
+                    network.fit(dataSet);
 /*                set.add(dataSet);
                 done.getAndIncrement();
                 logger.info("Added dataset to queue");*/
-            });
+                });
+            } catch (RejectedExecutionException e) {
+                logger.warning("Executor service rejected task.");
+            }
         }
 
         waitForExecutorService();
@@ -259,5 +254,6 @@ public class PPOTrainer {
         System.out.println("Model updated, restarting game");
         outputRobot.restartGame();
         modInterface.reset();
+        runGame();
     }
 }

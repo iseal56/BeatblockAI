@@ -12,6 +12,9 @@
         <maven.compiler.source>21</maven.compiler.source>
         <maven.compiler.target>21</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <JAVACPP_VERSION>1.5.7</JAVACPP_VERSION>
+        <CUDNN_VERSION>8.3</CUDNN_VERSION>
+        <CUDA_VERSION>11.6</CUDA_VERSION>
     </properties>
 
     <build>
@@ -71,17 +74,20 @@
             <version>1.0.0-M2.1</version>
             <scope>compile</scope>
         </dependency>
-        <!--<dependency>
-            <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-cuda-11.2</artifactId> Will add later
-            <version>1.0.0-M2.1</version>
-            <scope>compile</scope>
-        </dependency> -->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp</artifactId>
+            <version>${JAVACPP_VERSION}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>cuda-platform-redist</artifactId>
+            <version>${CUDA_VERSION}-${CUDNN_VERSION}-${JAVACPP_VERSION}</version>
+        </dependency>
         <dependency>
             <groupId>org.nd4j</groupId>
-            <artifactId>nd4j-native</artifactId>
+            <artifactId>nd4j-cuda-11.6-platform</artifactId>
             <version>1.0.0-M2.1</version>
-            <scope>compile</scope>
         </dependency>
         <dependency>
             <groupId>ch.qos.logback</groupId>
